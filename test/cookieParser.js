@@ -1,9 +1,8 @@
-
-var assert = require('assert')
-var cookieParser = require('..')
-var http = require('http')
-var request = require('supertest')
-var signature = require('cookie-signature')
+const assert = require('assert')
+const cookieParser = require('..')
+const http = require('http')
+const request = require('supertest')
+const signature = cookieParser.cookieSignature
 
 describe('cookieParser()', function () {
   it('should export JSONCookies function', function () {
@@ -49,8 +48,8 @@ describe('cookieParser()', function () {
 
   describe('when req.cookies exists', function () {
     it('should do nothing', function (done) {
-      var _parser = cookieParser()
-      var server = http.createServer(function (req, res) {
+      const _parser = cookieParser()
+      const server = http.createServer(function (req, res) {
         req.cookies = { fizz: 'buzz' }
         _parser(req, res, function (err) {
           if (err) {
@@ -71,7 +70,7 @@ describe('cookieParser()', function () {
   })
 
   describe('when a secret is given', function () {
-    var val = signature.sign('foobarbaz', 'keyboard cat')
+    const val = signature.sign('foobarbaz', 'keyboard cat')
     // TODO: "bar" fails...
 
     it('should populate req.signedCookies', function (done) {
@@ -89,7 +88,7 @@ describe('cookieParser()', function () {
     })
 
     it('should omit invalid signatures', function (done) {
-      var server = createServer('keyboard cat')
+      const server = createServer('keyboard cat')
 
       request(server)
         .get('/signed')
@@ -114,7 +113,7 @@ describe('cookieParser()', function () {
   })
 
   describe('when no secret is given', function () {
-    var server
+    let server
     before(function () {
       server = createServer()
     })
@@ -127,7 +126,7 @@ describe('cookieParser()', function () {
     })
 
     it('should not populate req.signedCookies', function (done) {
-      var val = signature.sign('foobarbaz', 'keyboard cat')
+      const val = signature.sign('foobarbaz', 'keyboard cat')
       request(server)
         .get('/signed')
         .set('Cookie', 'foo=s:' + val)
@@ -229,7 +228,7 @@ describe('cookieParser.signedCookies(obj, secret)', function () {
   })
 
   it('should remove signed strings from original object', function () {
-    var obj = {
+    const obj = {
       foo: 's:foobar.N5r0C3M8W+IPpzyAJaIddMWbTGfDSO+bfKlZErJ+MeE'
     }
 
@@ -238,7 +237,7 @@ describe('cookieParser.signedCookies(obj, secret)', function () {
   })
 
   it('should remove tampered strings from original object', function () {
-    var obj = {
+    const obj = {
       foo: 's:foobaz.N5r0C3M8W+IPpzyAJaIddMWbTGfDSO+bfKlZErJ+MeE'
     }
 
@@ -247,7 +246,7 @@ describe('cookieParser.signedCookies(obj, secret)', function () {
   })
 
   it('should leave unsigned string in original object', function () {
-    var obj = {
+    const obj = {
       fizz: 'buzz',
       foo: 's:foobar.N5r0C3M8W+IPpzyAJaIddMWbTGfDSO+bfKlZErJ+MeE'
     }
@@ -258,7 +257,7 @@ describe('cookieParser.signedCookies(obj, secret)', function () {
 
   describe('when secret is an array', function () {
     it('should include unsigned strings for matching secrets', function () {
-      var obj = {
+      const obj = {
         buzz: 's:foobar.N5r0C3M8W+IPpzyAJaIddMWbTGfDSO+bfKlZErJ+MeE',
         fizz: 's:foobar.JTCAgiMWsnuZpN3mrYnEUjXlGxmDi4POCBnWbRxse88'
       }
@@ -270,7 +269,7 @@ describe('cookieParser.signedCookies(obj, secret)', function () {
     })
 
     it('should include unsigned strings for all secrets', function () {
-      var obj = {
+      const obj = {
         buzz: 's:foobar.N5r0C3M8W+IPpzyAJaIddMWbTGfDSO+bfKlZErJ+MeE',
         fizz: 's:foobar.JTCAgiMWsnuZpN3mrYnEUjXlGxmDi4POCBnWbRxse88'
       }
@@ -284,7 +283,7 @@ describe('cookieParser.signedCookies(obj, secret)', function () {
 })
 
 function createServer (secret) {
-  var _parser = cookieParser(secret)
+  const _parser = cookieParser(secret)
   return http.createServer(function (req, res) {
     _parser(req, res, function (err) {
       if (err) {
@@ -293,7 +292,7 @@ function createServer (secret) {
         return
       }
 
-      var cookies = req.url === '/signed'
+      const cookies = req.url === '/signed'
         ? req.signedCookies
         : req.cookies
       res.end(JSON.stringify(cookies))

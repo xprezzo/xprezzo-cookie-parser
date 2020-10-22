@@ -1,7 +1,7 @@
 {
   "name": "xprezzo-cookie-parser",
   "description": "Parse HTTP request cookies",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Ben Ajenoui <info@seohero.io>",
   "license": "MIT",
   "repository": "xprezzo/xprezzo-cookie-parser",
@@ -10,8 +10,6 @@
     "middleware"
   ],
   "dependencies": {
-    "cookie": "0.4.1",
-    "cookie-signature": "1.1.0"
   },
   "devDependencies": {
     "eslint": "7.8.1",
@@ -28,6 +26,7 @@
   "files": [
     "LICENSE",
     "HISTORY.md",
+    "lib/",
     "index.js"
   ],
   "engines": {

@@ -11,65 +11,8 @@
  * @private
  */
 
-const cookie = require('cookie')
-const signature = require('cookie-signature')
-
-/**
- * Module exports.
- * @public
- */
-
-module.exports = cookieParser
-module.exports.JSONCookie = JSONCookie
-module.exports.JSONCookies = JSONCookies
-module.exports.signedCookie = signedCookie
-module.exports.signedCookies = signedCookies
-
-/**
- * Parse Cookie header and populate `req.cookies`
- * with an object keyed by the cookie names.
- *
- * @param {string|array} [secret] A string (or array of strings) representing cookie signing secret(s).
- * @param {Object} [options]
- * @return {Function}
- * @public
- */
-
-function cookieParser (secret, options) {
-  let secrets = !secret || Array.isArray(secret)
-    ? (secret || [])
-    : [secret]
-
-  return function cookieParser (req, res, next) {
-    if (req.cookies) {
-      return next()
-    }
-
-    let cookies = req.headers.cookie
-
-    req.secret = secrets[0]
-    req.cookies = Object.create(null)
-    req.signedCookies = Object.create(null)
-
-    // no cookies
-    if (!cookies) {
-      return next()
-    }
-
-    req.cookies = cookie.parse(cookies, options)
-
-    // parse signed cookies
-    if (secrets.length !== 0) {
-      req.signedCookies = signedCookies(req.cookies, secrets)
-      req.signedCookies = JSONCookies(req.signedCookies)
-    }
-
-    // parse JSON cookies
-    req.cookies = JSONCookies(req.cookies)
-
-    next()
-  }
-}
+const cookie = require('./lib/cookie')
+const signature = require('./lib/cookie-signature')
 
 /**
  * Parse JSON cookie string.
@@ -99,8 +42,8 @@ function JSONCookie (str) {
  * @public
  */
 
-function JSONCookies (obj) {
-  let cookies = Object.keys(obj)
+const JSONCookies = (obj) => {
+  const cookies = Object.keys(obj)
   let key
   let val
 
@@ -117,37 +60,6 @@ function JSONCookies (obj) {
 }
 
 /**
- * Parse a signed cookie string, return the decoded value.
- *
- * @param {String} str signed cookie string
- * @param {string|array} secret
- * @return {String} decoded value
- * @public
- */
-
-function signedCookie (str, secret) {
-  if (typeof str !== 'string') {
-    return undefined
-  }
-
-  if (str.substr(0, 2) !== 's:') {
-    return str
-  }
-
-  let secrets = !secret || Array.isArray(secret) ? (secret || []) : [secret]
-
-  for (let i = 0; i < secrets.length; i++) {
-    let val = signature.unsign(str.slice(2), secrets[i])
-
-    if (val !== false) {
-      return val
-    }
-  }
-
-  return false
-}
-
-/**
  * Parse signed cookies, returning an object containing the decoded key/value
  * pairs, while removing the signed key from obj.
  *
@@ -156,12 +68,11 @@ function signedCookie (str, secret) {
  * @return {Object}
  * @public
  */
-
-function signedCookies (obj, secret) {
-  let cookies = Object.keys(obj)
+const signedCookies = (obj, secret) => {
+  const cookies = Object.keys(obj)
   let dec
   let key
-  let ret = Object.create(null)
+  const ret = Object.create(null)
   let val
 
   for (let i = 0; i < cookies.length; i++) {
@@ -177,3 +88,83 @@ function signedCookies (obj, secret) {
 
   return ret
 }
+
+/**
+ * Parse a signed cookie string, return the decoded value.
+ *
+ * @param {String} str signed cookie string
+ * @param {string|array} secret
+ * @return {String} decoded value
+ * @public
+ */
+const signedCookie = (str, secret) => {
+  if (typeof str !== 'string') {
+    return undefined
+  }
+
+  if (str.substr(0, 2) !== 's:') {
+    return str
+  }
+
+  const secrets = !secret || Array.isArray(secret) ? (secret || []) : [secret]
+
+  for (let i = 0; i < secrets.length; i++) {
+    const val = signature.unsign(str.slice(2), secrets[i])
+
+    if (val !== false) {
+      return val
+    }
+  }
+  return false
+}
+
+/**
+* Parse Cookie header and populate `req.cookies`
+* with an object keyed by the cookie names.
+*
+* @param {string|array} [secret] A string (or array of strings) representing cookie signing secret(s).
+* @param {Object} [options]
+* @return {Function}
+* @public
+*/
+module.exports = (secret, options) => {
+  const secrets = !secret || Array.isArray(secret)
+    ? (secret || [])
+    : [secret]
+
+  return (req, res, next) => {
+    if (req.cookies) {
+      return next()
+    }
+
+    const cookies = req.headers.cookie
+
+    req.secret = secrets[0]
+    req.cookies = Object.create(null)
+    req.signedCookies = Object.create(null)
+
+    // no cookies
+    if (!cookies) {
+      return next()
+    }
+
+    req.cookies = cookie.parse(cookies, options)
+
+    // parse signed cookies
+    if (secrets.length !== 0) {
+      req.signedCookies = signedCookies(req.cookies, secrets)
+      req.signedCookies = JSONCookies(req.signedCookies)
+    }
+
+    // parse JSON cookies
+    req.cookies = JSONCookies(req.cookies)
+
+    next()
+  }
+}
+module.exports.JSONCookie = JSONCookie
+module.exports.JSONCookies = JSONCookies
+module.exports.signedCookie = signedCookie
+module.exports.signedCookies = signedCookies
+module.exports.cookie = cookie
+module.exports.cookieSignature = signature
